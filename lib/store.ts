@@ -109,20 +109,21 @@ export function formatRemainingTime(deadlineStr?: string): string {
   }
 }
 
-export function getCompetitionDateDisplay(settings?: EventSettings | null): { day: string; month: string; full: string } {
+export function getCompetitionDateDisplay(settings?: EventSettings | null): { day: string; month: string; full: string; year: string } {
   if (settings?.competitionDate && settings.competitionDate.includes('.')) {
     const parts = settings.competitionDate.split('.');
-    return { day: parts[0] || '12', month: '.' + (parts[1] || '12'), full: settings.competitionDate };
+    return { day: parts[0] || '12', month: '.' + (parts[1] || '12'), full: settings.competitionDate, year: '2026' };
   }
   if (settings?.deadline) {
     const d = new Date(settings.deadline);
     if (!isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
-      return { day, month: '.' + month, full: `${day}.${month}` };
+      const year = String(d.getFullYear()) || '2026';
+      return { day, month: '.' + month, full: `${day}.${month}`, year };
     }
   }
-  return { day: '12', month: '.12', full: '12.12' };
+  return { day: '12', month: '.12', full: '12.12', year: '2026' };
 }
 
 // ============================================================================
@@ -130,162 +131,96 @@ export function getCompetitionDateDisplay(settings?: EventSettings | null): { da
 // ============================================================================
 let syncInitialized = false;
 
+async function fetchCandidatesFromSupabase(): Promise<void> {
+  try {
+    const { data, error } = await supabase.from('candidates').select('*').order('n', { ascending: true });
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const mapped: Candidate[] = data.map((c: Record<string, unknown>) => ({
+        n: String(c.n),
+        name: String(c.name),
+        city: String(c.city),
+        votes: Number(c.votes) || 0,
+        img: String(c.img || ''),
+        tag: String(c.tag || ''),
+        slug: String(c.slug),
+        bio: String(c.bio || ''),
+      }));
+      localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify(mapped));
+      window.dispatchEvent(new Event(EVENT_CHANGE));
+    }
+  } catch (err) {
+    console.warn('Supabase candidates fetch error:', err);
+  }
+}
+
+async function fetchSettingsFromSupabase(): Promise<void> {
+  try {
+    const { data, error } = await supabase.from('event_settings').select('*').eq('id', 'default').single();
+    if (!error && data) {
+      const s: EventSettings = {
+        name: data.name || defaultSettings.name,
+        slug: data.slug || defaultSettings.slug,
+        edition: data.edition || defaultSettings.edition,
+        subtitle: data.subtitle || defaultSettings.subtitle,
+        heroImage: data.hero_image || defaultSettings.heroImage,
+        rankingVisible: data.ranking_visible ?? defaultSettings.rankingVisible,
+        votePriceFcfa: Number(data.vote_price_fcfa) || defaultSettings.votePriceFcfa,
+        votesOpen: data.votes_open ?? defaultSettings.votesOpen,
+        deadline: data.deadline || defaultSettings.deadline,
+        competitionDate: data.competition_date || defaultSettings.competitionDate,
+        socials: Array.isArray(data.socials) && data.socials.length > 0 ? data.socials : defaultSettings.socials,
+      };
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
+      window.dispatchEvent(new Event(EVENT_CHANGE));
+    }
+  } catch (err) {
+    console.warn('Supabase settings fetch error:', err);
+  }
+}
+
+async function fetchTransactionsFromSupabase(): Promise<void> {
+  try {
+    const { data, error } = await supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(50);
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const txs: Transaction[] = data.map((t: Record<string, unknown>) => ({
+        id: String(t.id),
+        candidateSlug: String(t.candidate_slug),
+        candidateName: String(t.candidate_name),
+        candidateN: String(t.candidate_n),
+        votes: Number(t.votes) || 1,
+        amountFcfa: Number(t.amount_fcfa) || 100,
+        operator: t.operator as 'MTN Mobile Money' | 'Orange Money',
+        phone: String(t.phone),
+        date: String(t.date),
+        status: t.status as 'SUCCESS' | 'PENDING' | 'FAILED',
+      }));
+      localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(txs));
+      window.dispatchEvent(new Event(EVENT_CHANGE));
+    }
+  } catch (err) {
+    console.warn('Supabase transactions fetch error:', err);
+  }
+}
+
 export function initSupabaseSync(): void {
   if (typeof window === 'undefined' || syncInitialized) return;
   syncInitialized = true;
 
-  // 1. Fetch Candidates from Supabase
-  supabase
-    .from('candidates')
-    .select('*')
-    .order('n', { ascending: true })
-    .then(({ data, error }) => {
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const mapped: Candidate[] = data.map((c) => ({
-          n: c.n,
-          name: c.name,
-          city: c.city,
-          votes: Number(c.votes) || 0,
-          img: c.img || '',
-          tag: c.tag || '',
-          slug: c.slug,
-          bio: c.bio || '',
-        }));
-        localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify(mapped));
-        window.dispatchEvent(new Event(EVENT_CHANGE));
-      }
-    })
-    .catch((err) => console.warn('Supabase candidates fetch error:', err));
+  fetchCandidatesFromSupabase();
+  fetchSettingsFromSupabase();
+  fetchTransactionsFromSupabase();
 
-  // 2. Fetch Settings from Supabase
-  supabase
-    .from('event_settings')
-    .select('*')
-    .eq('id', 'default')
-    .single()
-    .then(({ data, error }) => {
-      if (!error && data) {
-        const s: EventSettings = {
-          name: data.name || defaultSettings.name,
-          slug: data.slug || defaultSettings.slug,
-          edition: data.edition || defaultSettings.edition,
-          subtitle: data.subtitle || defaultSettings.subtitle,
-          heroImage: data.hero_image || defaultSettings.heroImage,
-          rankingVisible: data.ranking_visible ?? defaultSettings.rankingVisible,
-          votePriceFcfa: Number(data.vote_price_fcfa) || defaultSettings.votePriceFcfa,
-          votesOpen: data.votes_open ?? defaultSettings.votesOpen,
-          deadline: data.deadline || defaultSettings.deadline,
-          competitionDate: data.competition_date || defaultSettings.competitionDate,
-          socials: Array.isArray(data.socials) && data.socials.length > 0 ? data.socials : defaultSettings.socials,
-        };
-        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
-        window.dispatchEvent(new Event(EVENT_CHANGE));
-      }
-    })
-    .catch((err) => console.warn('Supabase settings fetch error:', err));
-
-  // 3. Fetch Transactions from Supabase
-  supabase
-    .from('transactions')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50)
-    .then(({ data, error }) => {
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const txs: Transaction[] = data.map((t) => ({
-          id: t.id,
-          candidateSlug: t.candidate_slug,
-          candidateName: t.candidate_name,
-          candidateN: t.candidate_n,
-          votes: Number(t.votes) || 1,
-          amountFcfa: Number(t.amount_fcfa) || 100,
-          operator: t.operator as 'MTN Mobile Money' | 'Orange Money',
-          phone: t.phone,
-          date: t.date,
-          status: t.status as 'SUCCESS' | 'PENDING' | 'FAILED',
-        }));
-        localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(txs));
-        window.dispatchEvent(new Event(EVENT_CHANGE));
-      }
-    })
-    .catch((err) => console.warn('Supabase transactions fetch error:', err));
-
-  // 4. Subscribe to Realtime Updates
   try {
     supabase
       .channel('public:realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates' }, () => {
-        supabase
-          .from('candidates')
-          .select('*')
-          .order('n', { ascending: true })
-          .then(({ data }) => {
-            if (data && data.length > 0) {
-              const mapped: Candidate[] = data.map((c) => ({
-                n: c.n,
-                name: c.name,
-                city: c.city,
-                votes: Number(c.votes) || 0,
-                img: c.img || '',
-                tag: c.tag || '',
-                slug: c.slug,
-                bio: c.bio || '',
-              }));
-              localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify(mapped));
-              window.dispatchEvent(new Event(EVENT_CHANGE));
-            }
-          });
+        fetchCandidatesFromSupabase();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'event_settings' }, () => {
-        supabase
-          .from('event_settings')
-          .select('*')
-          .eq('id', 'default')
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              const s: EventSettings = {
-                name: data.name || defaultSettings.name,
-                slug: data.slug || defaultSettings.slug,
-                edition: data.edition || defaultSettings.edition,
-                subtitle: data.subtitle || defaultSettings.subtitle,
-                heroImage: data.hero_image || defaultSettings.heroImage,
-                rankingVisible: data.ranking_visible ?? defaultSettings.rankingVisible,
-                votePriceFcfa: Number(data.vote_price_fcfa) || defaultSettings.votePriceFcfa,
-                votesOpen: data.votes_open ?? defaultSettings.votesOpen,
-                deadline: data.deadline || defaultSettings.deadline,
-                competitionDate: data.competition_date || defaultSettings.competitionDate,
-                socials: Array.isArray(data.socials) ? data.socials : defaultSettings.socials,
-              };
-              localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s));
-              window.dispatchEvent(new Event(EVENT_CHANGE));
-            }
-          });
+        fetchSettingsFromSupabase();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
-        supabase
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50)
-          .then(({ data }) => {
-            if (data && data.length > 0) {
-              const txs: Transaction[] = data.map((t) => ({
-                id: t.id,
-                candidateSlug: t.candidate_slug,
-                candidateName: t.candidate_name,
-                candidateN: t.candidate_n,
-                votes: Number(t.votes) || 1,
-                amountFcfa: Number(t.amount_fcfa) || 100,
-                operator: t.operator as 'MTN Mobile Money' | 'Orange Money',
-                phone: t.phone,
-                date: t.date,
-                status: t.status as 'SUCCESS' | 'PENDING' | 'FAILED',
-              }));
-              localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(txs));
-              window.dispatchEvent(new Event(EVENT_CHANGE));
-            }
-          });
+        fetchTransactionsFromSupabase();
       })
       .subscribe();
   } catch (err) {
@@ -323,24 +258,28 @@ export function saveStoredCandidates(candidates: Candidate[]): void {
     window.dispatchEvent(new Event(EVENT_CHANGE));
 
     // Async sync to Supabase
-    Promise.all(
-      candidates.map((c) =>
-        supabase.from('candidates').upsert(
-          {
-            n: c.n,
-            name: c.name,
-            city: c.city,
-            votes: c.votes,
-            img: c.img,
-            tag: c.tag,
-            slug: c.slug,
-            bio: c.bio || '',
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'slug' }
-        )
-      )
-    ).catch((err) => console.error('Supabase candidates upsert error:', err));
+    (async () => {
+      try {
+        for (const c of candidates) {
+          await supabase.from('candidates').upsert(
+            {
+              n: c.n,
+              name: c.name,
+              city: c.city,
+              votes: c.votes,
+              img: c.img,
+              tag: c.tag,
+              slug: c.slug,
+              bio: c.bio || '',
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'slug' }
+          );
+        }
+      } catch (err) {
+        console.error('Supabase candidates upsert error:', err);
+      }
+    })();
   } catch (err) {
     console.error('Failed to save candidates', err);
   }
@@ -351,14 +290,13 @@ export function deleteStoredCandidate(slug: string): void {
   const updated = current.filter((c) => c.slug !== slug);
   saveStoredCandidates(updated);
 
-  supabase
-    .from('candidates')
-    .delete()
-    .eq('slug', slug)
-    .then(({ error }) => {
-      if (error) console.error('Supabase candidate delete error:', error);
-    })
-    .catch((err) => console.error(err));
+  (async () => {
+    try {
+      await supabase.from('candidates').delete().eq('slug', slug);
+    } catch (err) {
+      console.error('Supabase candidate delete error:', err);
+    }
+  })();
 }
 
 export function getStoredSettings(): EventSettings {
@@ -387,30 +325,30 @@ export function saveStoredSettings(settings: EventSettings): void {
     window.dispatchEvent(new Event(EVENT_CHANGE));
 
     // Async sync to Supabase
-    supabase
-      .from('event_settings')
-      .upsert(
-        {
-          id: 'default',
-          name: settings.name,
-          slug: settings.slug,
-          edition: settings.edition,
-          subtitle: settings.subtitle,
-          hero_image: settings.heroImage,
-          ranking_visible: settings.rankingVisible,
-          vote_price_fcfa: settings.votePriceFcfa,
-          votes_open: settings.votesOpen,
-          deadline: settings.deadline,
-          competition_date: settings.competitionDate,
-          socials: settings.socials,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      )
-      .then(({ error }) => {
-        if (error) console.error('Supabase settings upsert error:', error);
-      })
-      .catch((err) => console.error(err));
+    (async () => {
+      try {
+        await supabase.from('event_settings').upsert(
+          {
+            id: 'default',
+            name: settings.name,
+            slug: settings.slug,
+            edition: settings.edition,
+            subtitle: settings.subtitle,
+            hero_image: settings.heroImage,
+            ranking_visible: settings.rankingVisible,
+            vote_price_fcfa: settings.votePriceFcfa,
+            votes_open: settings.votesOpen,
+            deadline: settings.deadline,
+            competition_date: settings.competitionDate,
+            socials: settings.socials,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      } catch (err) {
+        console.error('Supabase settings upsert error:', err);
+      }
+    })();
   } catch (err) {
     console.error('Failed to save settings', err);
   }
@@ -448,41 +386,32 @@ export function addStoredTransaction(tx: Omit<Transaction, 'id' | 'date'>): Tran
       window.dispatchEvent(new Event(EVENT_CHANGE));
 
       // Async sync to Supabase
-      supabase
-        .from('transactions')
-        .insert({
-          id: newTx.id,
-          candidate_slug: newTx.candidateSlug,
-          candidate_name: newTx.candidateName,
-          candidate_n: newTx.candidateN,
-          votes: newTx.votes,
-          amount_fcfa: newTx.amountFcfa,
-          operator: newTx.operator,
-          phone: newTx.phone,
-          date: newTx.date,
-          status: newTx.status,
-        })
-        .then(({ error }) => {
-          if (error) console.error('Supabase transaction insert error:', error);
-        })
-        .catch((err) => console.error(err));
+      (async () => {
+        try {
+          await supabase.from('transactions').insert({
+            id: newTx.id,
+            candidate_slug: newTx.candidateSlug,
+            candidate_name: newTx.candidateName,
+            candidate_n: newTx.candidateN,
+            votes: newTx.votes,
+            amount_fcfa: newTx.amountFcfa,
+            operator: newTx.operator,
+            phone: newTx.phone,
+            date: newTx.date,
+            status: newTx.status,
+          });
 
-      // Increment candidate votes in Supabase
-      supabase
-        .from('candidates')
-        .select('votes')
-        .eq('slug', newTx.candidateSlug)
-        .single()
-        .then(({ data }) => {
+          const { data } = await supabase.from('candidates').select('votes').eq('slug', newTx.candidateSlug).single();
           if (data) {
-            supabase
+            await supabase
               .from('candidates')
               .update({ votes: (Number(data.votes) || 0) + newTx.votes })
-              .eq('slug', newTx.candidateSlug)
-              .then(() => {});
+              .eq('slug', newTx.candidateSlug);
           }
-        })
-        .catch((err) => console.error(err));
+        } catch (err) {
+          console.error('Supabase transaction insert error:', err);
+        }
+      })();
     } catch (err) {
       console.error(err);
     }

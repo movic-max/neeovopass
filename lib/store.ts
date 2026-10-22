@@ -71,16 +71,7 @@ export const defaultSettings: EventSettings = {
   ],
 };
 
-const initialTransactions: Transaction[] = [
-  { id: 'TX-94821', candidateSlug: 'merveille-nkoa', candidateName: 'Merveille Nkoa', candidateN: '01', votes: 50, amountFcfa: 5000, operator: 'MTN Mobile Money', phone: '677 •• •• 89', date: 'Aujourd’hui 20:14', status: 'SUCCESS' },
-  { id: 'TX-94820', candidateSlug: 'naomi-tchana', candidateName: 'Naomi Tchana', candidateN: '02', votes: 100, amountFcfa: 10000, operator: 'Orange Money', phone: '694 •• •• 12', date: 'Aujourd’hui 19:48', status: 'SUCCESS' },
-  { id: 'TX-94819', candidateSlug: 'esther-mbarga', candidateName: 'Esther Mbarga', candidateN: '03', votes: 20, amountFcfa: 2000, operator: 'MTN Mobile Money', phone: '670 •• •• 45', date: 'Aujourd’hui 18:32', status: 'SUCCESS' },
-  { id: 'TX-94818', candidateSlug: 'ines-fokam', candidateName: 'Inès Fokam', candidateN: '04', votes: 50, amountFcfa: 5000, operator: 'Orange Money', phone: '699 •• •• 63', date: 'Aujourd’hui 17:15', status: 'SUCCESS' },
-  { id: 'TX-94817', candidateSlug: 'merveille-nkoa', candidateName: 'Merveille Nkoa', candidateN: '01', votes: 10, amountFcfa: 1000, operator: 'MTN Mobile Money', phone: '682 •• •• 01', date: 'Aujourd’hui 16:50', status: 'SUCCESS' },
-  { id: 'TX-94816', candidateSlug: 'ariane-mbah', candidateName: 'Ariane Mbah', candidateN: '05', votes: 30, amountFcfa: 3000, operator: 'MTN Mobile Money', phone: '675 •• •• 99', date: 'Aujourd’hui 15:22', status: 'SUCCESS' },
-  { id: 'TX-94815', candidateSlug: 'sandra-tabe', candidateName: 'Sandra Tabe', candidateN: '06', votes: 15, amountFcfa: 1500, operator: 'Orange Money', phone: '690 •• •• 34', date: 'Aujourd’hui 14:05', status: 'SUCCESS' },
-  { id: 'TX-94814', candidateSlug: 'diane-ngono', candidateName: 'Diane Ngono', candidateN: '07', votes: 25, amountFcfa: 2500, operator: 'Orange Money', phone: '696 •• •• 77', date: 'Aujourd’hui 12:40', status: 'SUCCESS' },
-];
+const initialTransactions: Transaction[] = [];
 
 export function getCandidatePhotoUrl(img: string | undefined): string {
   if (!img || !img.trim()) return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
@@ -134,7 +125,7 @@ let syncInitialized = false;
 async function fetchCandidatesFromSupabase(): Promise<void> {
   try {
     const { data, error } = await supabase.from('candidates').select('*').order('n', { ascending: true });
-    if (!error && Array.isArray(data) && data.length > 0) {
+    if (!error && Array.isArray(data)) {
       const mapped: Candidate[] = data.map((c: Record<string, unknown>) => ({
         n: String(c.n),
         name: String(c.name),
@@ -181,7 +172,7 @@ async function fetchSettingsFromSupabase(): Promise<void> {
 async function fetchTransactionsFromSupabase(): Promise<void> {
   try {
     const { data, error } = await supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(50);
-    if (!error && Array.isArray(data) && data.length > 0) {
+    if (!error && Array.isArray(data)) {
       const txs: Transaction[] = data.map((t: Record<string, unknown>) => ({
         id: String(t.id),
         candidateSlug: String(t.candidate_slug),
@@ -237,17 +228,16 @@ if (typeof window !== 'undefined') {
 // STORE GETTERS & PERSISTENCE
 // ============================================================================
 export function getStoredCandidates(): Candidate[] {
-  if (typeof window === 'undefined') return demoCandidates;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CANDIDATES);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify(demoCandidates));
-      return demoCandidates;
+      return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : demoCandidates;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return demoCandidates;
+    return [];
   }
 }
 
@@ -355,17 +345,16 @@ export function saveStoredSettings(settings: EventSettings): void {
 }
 
 export function getStoredTransactions(): Transaction[] {
-  if (typeof window === 'undefined') return initialTransactions;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_TRANSACTIONS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(initialTransactions));
-      return initialTransactions;
+      return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : initialTransactions;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return initialTransactions;
+    return [];
   }
 }
 
@@ -466,11 +455,11 @@ export function logoutAdmin(): void {
 export function resetAllToDefaults(): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify(demoCandidates));
+    localStorage.setItem(STORAGE_KEY_CANDIDATES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(defaultSettings));
-    localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(initialTransactions));
+    localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify([]));
     window.dispatchEvent(new Event(EVENT_CHANGE));
-    saveStoredCandidates(demoCandidates);
+    saveStoredCandidates([]);
     saveStoredSettings(defaultSettings);
   } catch (err) {
     console.error(err);

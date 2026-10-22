@@ -246,45 +246,67 @@ export default function Home() {
         </div>
 
         <div className="candidate-grid">
-          {sortedCandidates.map((c, i) => (
-            <article className={`candidate-card ${i === 0 ? 'featured' : ''}`} key={c.slug || c.n}>
-              <Link
-                href={`/evenement/miss-lekie-2e-edition/candidate/${c.slug}`}
-                className="candidate-photo"
-                style={{ display: 'block', textDecoration: 'none', cursor: 'pointer' }}
-                title={`Découvrir le profil de ${c.name}`}
-              >
-                <Photo id={c.img} alt={c.name} />
-                <span className="candidate-number">N° {c.n}</span>
-                <span className="candidate-tag">{c.tag}</span>
-                <span className="vote-round" aria-label={`Voter pour ${c.name}`}>
-                  ↗
-                </span>
-              </Link>
-              <div className="candidate-info">
-                <div>
-                  <Link
-                    href={`/evenement/miss-lekie-2e-edition/candidate/${c.slug}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <h3>{c.name}</h3>
-                  </Link>
-                  <p>{c.city}</p>
+          {sortedCandidates.length === 0 ? (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                textAlign: 'center',
+                padding: '60px 20px',
+                background: '#121110',
+                border: '1px dashed rgba(217, 182, 107, 0.35)',
+                borderRadius: '12px',
+                margin: '20px 0',
+              }}
+            >
+              <div style={{ fontSize: '38px', marginBottom: '14px' }}>👑</div>
+              <h3 style={{ font: "500 24px 'Playfair Display', serif", color: 'var(--cream)', margin: '0 0 10px' }}>
+                Les candidates arrivent très bientôt
+              </h3>
+              <p style={{ color: 'var(--muted)', fontSize: '13px', maxWidth: '440px', margin: '0 auto', lineHeight: 1.8 }}>
+                La liste officielle des candidates pour Miss Lékié 2ᵉ Édition est en cours de configuration. Les profils seront publiés ici très prochainement !
+              </p>
+            </div>
+          ) : (
+            sortedCandidates.map((c, i) => (
+              <article className={`candidate-card ${i === 0 ? 'featured' : ''}`} key={c.slug || c.n}>
+                <Link
+                  href={`/evenement/miss-lekie-2e-edition/candidate/${c.slug}`}
+                  className="candidate-photo"
+                  style={{ display: 'block', textDecoration: 'none', cursor: 'pointer' }}
+                  title={`Découvrir le profil de ${c.name}`}
+                >
+                  <Photo id={c.img} alt={c.name} />
+                  <span className="candidate-number">N° {c.n}</span>
+                  <span className="candidate-tag">{c.tag}</span>
+                  <span className="vote-round" aria-label={`Voter pour ${c.name}`}>
+                    ↗
+                  </span>
+                </Link>
+                <div className="candidate-info">
+                  <div>
+                    <Link
+                      href={`/evenement/miss-lekie-2e-edition/candidate/${c.slug}`}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <h3>{c.name}</h3>
+                    </Link>
+                    <p>{c.city}</p>
+                  </div>
+                  <div className="votes">
+                    <strong>{settings.rankingVisible ? c.votes.toLocaleString('fr-FR') : '•••'}</strong>
+                    <span>{settings.rankingVisible ? 'VOIX' : 'CONFIDENTIEL'}</span>
+                  </div>
                 </div>
-                <div className="votes">
-                  <strong>{settings.rankingVisible ? c.votes.toLocaleString('fr-FR') : '•••'}</strong>
-                  <span>{settings.rankingVisible ? 'VOIX' : 'CONFIDENTIEL'}</span>
+                <div className="progress">
+                  <span
+                    style={{
+                      width: settings.rankingVisible ? `${Math.max(14, (c.votes / maxVotes) * 100)}%` : '50%',
+                    }}
+                  />
                 </div>
-              </div>
-              <div className="progress">
-                <span
-                  style={{
-                    width: settings.rankingVisible ? `${Math.max(14, (c.votes / maxVotes) * 100)}%` : '50%',
-                  }}
-                />
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          )}
         </div>
 
         <div className="center-action">

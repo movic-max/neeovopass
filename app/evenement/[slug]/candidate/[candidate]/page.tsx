@@ -126,6 +126,12 @@ export default function CandidatePage({
 
   const unitPrice = settings.votePriceFcfa || 100;
 
+  // Lien de partage avec paramètre de version : force WhatsApp/Facebook à régénérer l'aperçu (photo de la candidate)
+  const shareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/evenement/${eventSlug}/candidate/${c.slug}?v=2`
+      : '';
+
   return (
     <main className="detail-page">
       <div className="detail-nav candidate-nav">
@@ -217,7 +223,7 @@ export default function CandidatePage({
             <button
               onClick={() => {
                 if (typeof window !== 'undefined') {
-                  navigator.clipboard?.writeText(window.location.href);
+                  navigator.clipboard?.writeText(shareUrl);
                   setCopiedLink(true);
                   setTimeout(() => setCopiedLink(false), 2500);
                 }
@@ -236,7 +242,7 @@ export default function CandidatePage({
               rel="noreferrer"
               href={`https://wa.me/?text=${encodeURIComponent(
                 `Votez pour ${c.name} (N° ${c.n}) au concours Miss Beauté Africaine Lékié 2026 !\nCliquez ici pour soutenir sa candidature :\n${
-                  typeof window !== 'undefined' ? window.location.href : ''
+                  shareUrl
                 }`
               )}`}
               className="social-icon-btn"
@@ -249,7 +255,7 @@ export default function CandidatePage({
               target="_blank"
               rel="noreferrer"
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                typeof window !== 'undefined' ? window.location.href : ''
+                shareUrl
               )}`}
               className="social-icon-btn"
               style={{ width: 34, height: 34 }}
@@ -263,7 +269,7 @@ export default function CandidatePage({
               href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
                 `Je soutiens ${c.name} (N° ${c.n}) pour Miss Beauté Africaine Lékié 2026 !`
               )}&url=${encodeURIComponent(
-                typeof window !== 'undefined' ? window.location.href : ''
+                shareUrl
               )}`}
               className="social-icon-btn"
               style={{ width: 34, height: 34 }}

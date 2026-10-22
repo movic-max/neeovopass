@@ -404,7 +404,7 @@ export default function AdminDashboardPage() {
   const handleCopyCandidateLink = (slug: string, name: string) => {
     if (typeof window !== 'undefined') {
       const origin = window.location.origin;
-      const url = `${origin}/evenement/${settings?.slug || 'miss-lekie-2e-edition'}/candidate/${slug}`;
+      const url = `${origin}/evenement/${settings?.slug || 'miss-lekie-2e-edition'}/candidate/${slug}?v=2`;
       navigator.clipboard?.writeText(url);
       showToast(`Lien de vote officiel de "${name}" copié !`);
     }

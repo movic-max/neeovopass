@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'NEEOVOPASS — Miss Beauté Africaine Lékié 2e Édition',
     description: 'Publie. Vends. Fais Voter. L’élégance, la grâce et la fierté de chez nous.',
-    images: ['/miss-beaute-logo.jpeg', '/neeovopass-logo.jpg'],
+    images: ['/neeovopass-logo.jpg'],
   },
 };
 export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="fr"><body>{children}</body></html>; }

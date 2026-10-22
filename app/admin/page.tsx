@@ -515,7 +515,19 @@ export default function AdminDashboardPage() {
               setMobileMenuOpen(false);
             }}
           >
-            <span className="sidebar-item-icon">📊</span>
+            <span className="sidebar-item-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22 }}>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                style={{ display: 'block' }}
+              >
+                <rect x="3" y="12" width="4.5" height="9" rx="1.5" opacity="0.75" />
+                <rect x="9.75" y="4" width="4.5" height="17" rx="1.5" />
+                <rect x="16.5" y="8" width="4.5" height="13" rx="1.5" opacity="0.9" />
+              </svg>
+            </span>
             <span>Vue d’ensemble</span>
           </button>
 

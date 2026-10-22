@@ -1,8 +1,14 @@
 import type { Metadata, ResolvingMetadata } from 'next';
-import { headers } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 
-export const dynamic = 'force-dynamic';
+// Page mise en cache 5 min sur le CDN Vercel : réponse instantanée pour les robots WhatsApp/Facebook
+export const revalidate = 300;
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+  'https://neeovopass.vercel.app'
+).replace(/\/$/, '');
 
 export async function generateMetadata(
   { params }: { params: { slug: string; candidate: string } },
@@ -16,7 +22,7 @@ export async function generateMetadata(
   try {
     const { data } = await supabase
       .from('candidates')
-      .select('name, n, slug, tag, bio, city, img')
+      .select('name, n, slug, tag, bio, city')
       .or(`slug.eq.${candidateParam},n.eq.${candidateParam}`)
       .maybeSingle();
     candidate = data;
@@ -24,11 +30,8 @@ export async function generateMetadata(
     console.warn('Metadata candidate fetch error:', err);
   }
 
-  // 2. Resolve domain dynamically
-  const headersList = headers();
-  const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000';
-  const proto = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
-  const baseUrl = `${proto}://${host}`;
+  // 2. Domaine du site
+  const baseUrl = SITE_URL;
 
   const pageUrl = `${baseUrl}/evenement/${params.slug}/candidate/${candidateParam}`;
 

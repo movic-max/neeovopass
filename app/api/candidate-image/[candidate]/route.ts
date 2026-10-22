@@ -3,7 +3,9 @@ import { supabase } from '@/lib/supabase';
 import fs from 'fs';
 import path from 'path';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
+
+const CDN_CACHE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400';
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +36,7 @@ export async function GET(
             headers: {
               'Content-Type': contentType,
               'Content-Length': buffer.length.toString(),
-              'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+              'Cache-Control': CDN_CACHE,
             },
           });
         }
@@ -51,7 +53,7 @@ export async function GET(
               status: 200,
               headers: {
                 'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+                'Cache-Control': CDN_CACHE,
               },
             });
           }
@@ -73,7 +75,7 @@ export async function GET(
             status: 200,
             headers: {
               'Content-Type': contentType,
-              'Cache-Control': 'public, max-age=86400',
+              'Cache-Control': CDN_CACHE,
             },
           });
         }
@@ -92,7 +94,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'image/jpeg',
-          'Cache-Control': 'public, max-age=86400',
+          'Cache-Control': CDN_CACHE,
         },
       });
     }
@@ -104,7 +106,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'image/jpeg',
-          'Cache-Control': 'public, max-age=86400',
+          'Cache-Control': CDN_CACHE,
         },
       });
     }

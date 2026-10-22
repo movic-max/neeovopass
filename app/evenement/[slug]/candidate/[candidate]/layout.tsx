@@ -2,6 +2,7 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { supabase } from '@/lib/supabase';
 
 // Page mise en cache 5 min sur le CDN Vercel : réponse instantanée pour les robots WhatsApp/Facebook
+export const dynamic = 'force-static';
 export const revalidate = 300;
 
 const SITE_URL = (

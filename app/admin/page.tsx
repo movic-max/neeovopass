@@ -35,6 +35,31 @@ import {
 } from 'recharts';
 import './admin.css';
 
+const DEFAULT_DISTINCTIONS = [
+  'Grâce & Élégance',
+  'Coup de cœur',
+  'Charisme & Présence',
+  'Audace & Détermination',
+  'Authenticité & Tradition',
+  'Rayonnement culturel',
+  'Inspiration & Leadership',
+  'Créativité & Modernité',
+  'Sourire & Douceur',
+  'Fierté Lékié',
+  'Élégance naturelle',
+  'Personnalité rayonnante',
+  'Dynamisme & Jeunesse',
+  'Ambassadrice de charme',
+  'Beauté & Valeurs',
+  'Étoile montante',
+];
+
+function getDefaultDistinctionForNumber(num: number | string): string {
+  const n = parseInt(String(num).trim(), 10);
+  if (isNaN(n) || n <= 0) return DEFAULT_DISTINCTIONS[0];
+  return DEFAULT_DISTINCTIONS[(n - 1) % DEFAULT_DISTINCTIONS.length];
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -236,12 +261,13 @@ export default function AdminDashboardPage() {
 
   const handleOpenAddModal = () => {
     setEditingCandidate(null);
-    const nextNum = String(candidates.length + 1).padStart(2, '0');
+    const nextIdx = candidates.length + 1;
+    const nextNum = String(nextIdx).padStart(2, '0');
     setFormCandidate({
       n: nextNum,
       name: '',
       city: '',
-      tag: 'Étoile montante',
+      tag: getDefaultDistinctionForNumber(nextIdx),
       votes: 10,
       img: '',
       bio: '',
@@ -1539,7 +1565,15 @@ export default function AdminDashboardPage() {
                     type="text"
                     className="admin-input"
                     value={formCandidate.n}
-                    onChange={(e) => setFormCandidate({ ...formCandidate, n: e.target.value })}
+                    onChange={(e) => {
+                      const newN = e.target.value;
+                      const shouldAutoTag = !formCandidate.tag || DEFAULT_DISTINCTIONS.includes(formCandidate.tag);
+                      setFormCandidate({
+                        ...formCandidate,
+                        n: newN,
+                        tag: shouldAutoTag ? getDefaultDistinctionForNumber(newN) : formCandidate.tag,
+                      });
+                    }}
                     required
                   />
                 </div>
@@ -1575,9 +1609,49 @@ export default function AdminDashboardPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cand-tag">
-                    Distinction / Tag
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label className="form-label" htmlFor="cand-tag" style={{ margin: 0 }}>
+                      Distinction / Titre
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormCandidate({ ...formCandidate, tag: getDefaultDistinctionForNumber(formCandidate.n) })}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--admin-gold, #d9b66b)',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: 0,
+                      }}
+                      title="Attribuer la distinction par défaut selon le N°"
+                    >
+                      Suggérer pour N° {formCandidate.n || '?'}
+                    </button>
+                  </div>
+
+                  {/* Dropdown list of distinctions */}
+                  <select
+                    className="admin-input"
+                    style={{ marginBottom: 8, cursor: 'pointer', background: '#1c1b18', color: '#f3ede2' }}
+                    value={DEFAULT_DISTINCTIONS.includes(formCandidate.tag) ? formCandidate.tag : 'custom'}
+                    onChange={(e) => {
+                      if (e.target.value !== 'custom') {
+                        setFormCandidate({ ...formCandidate, tag: e.target.value });
+                      }
+                    }}
+                  >
+                    <option value="" disabled>-- Choisir une distinction dans la liste --</option>
+                    {DEFAULT_DISTINCTIONS.map((dist, idx) => (
+                      <option key={dist} value={dist}>
+                        {idx + 1}. {dist} {String(idx + 1).padStart(2, '0') === String(formCandidate.n).padStart(2, '0') ? '★ (suggéré pour ce N°)' : ''}
+                      </option>
+                    ))}
+                    <option value="custom">✏️ Personnalisé (saisie libre ci-dessous)</option>
+                  </select>
+
+                  {/* Free text input */}
                   <input
                     id="cand-tag"
                     type="text"
@@ -1587,6 +1661,29 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setFormCandidate({ ...formCandidate, tag: e.target.value })}
                     required
                   />
+
+                  {/* Quick pills badges */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, maxHeight: 72, overflowY: 'auto' }}>
+                    {DEFAULT_DISTINCTIONS.map((d) => (
+                      <button
+                        type="button"
+                        key={d}
+                        onClick={() => setFormCandidate({ ...formCandidate, tag: d })}
+                        style={{
+                          fontSize: '0.68rem',
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                          border: formCandidate.tag === d ? '1px solid #d9b66b' : '1px solid rgba(255,255,255,0.12)',
+                          background: formCandidate.tag === d ? 'rgba(217,182,107,0.2)' : 'rgba(255,255,255,0.04)',
+                          color: formCandidate.tag === d ? '#d9b66b' : '#b8b0a2',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

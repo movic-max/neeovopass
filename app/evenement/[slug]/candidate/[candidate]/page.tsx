@@ -129,7 +129,7 @@ export default function CandidatePage({
   // Lien de partage avec paramètre de version : force WhatsApp/Facebook à régénérer l'aperçu (photo de la candidate)
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/evenement/${eventSlug}/candidate/${c.slug}?v=3`
+      ? `${window.location.origin}/evenement/${eventSlug}/candidate/${c.slug}?v=4`
       : '';
 
   return (

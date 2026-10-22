@@ -56,8 +56,8 @@ export async function generateMetadata(
     candidate.bio ||
     `Soutenez ${candidateName} ${candidateNum ? `(${candidateNum})` : ''} au concours ${eventName} 2e Édition 2026. Vote officiel et sécurisé dès 100 FCFA sur NEEOVOPASS via MTN MoMo ou Orange Money.`;
 
-  // Always use the dedicated route which handles base64, remote URLs, and local files seamlessly
-  const imageUrl = `${baseUrl}/api/candidate-image/${candidate.slug || candidateParam}`;
+  // Always use the dedicated route ending with .jpg which WhatsApp requires
+  const imageUrl = `${baseUrl}/api/candidate-image/${candidate.slug || candidateParam}.jpg`;
 
   return {
     title,
@@ -72,8 +72,10 @@ export async function generateMetadata(
       images: [
         {
           url: imageUrl,
+          secureUrl: imageUrl,
           width: 800,
           height: 1000,
+          type: 'image/jpeg',
           alt: `Photo de ${candidateName} — ${eventName}`,
         },
       ],

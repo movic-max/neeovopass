@@ -11,7 +11,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { candidate: string } }
 ) {
-  const candidateParam = decodeURIComponent(params.candidate || '').trim();
+  const rawParam = decodeURIComponent(params.candidate || '').trim();
+  const candidateParam = rawParam.replace(/\.(jpg|jpeg|png|webp)$/i, '');
 
   try {
     // 1. Fetch candidate by slug or candidate number

@@ -229,21 +229,72 @@ export default function AdminDashboardPage() {
     showToast(`+${count} voix ajoutées pour ${target?.name || 'la candidate'}`);
   };
 
-  const handlePhotoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImageToDataUrl = (file: File, maxWidth = 1920, maxHeight = 1080, quality = 0.85): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = e.target?.result;
+        if (typeof src !== 'string') {
+          resolve('');
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(src);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(src);
+        img.src = src;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("L'image dépasse 5 Mo. Veuillez choisir une photo plus légère.");
+      if (file.size > 15 * 1024 * 1024) {
+        alert("L'image dépasse 15 Mo. Veuillez choisir une photo plus légère.");
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setFormCandidate((prev) => ({ ...prev, img: reader.result as string }));
-          showToast('Photo de la candidate importée avec succès !');
-        }
-      };
-      reader.readAsDataURL(file);
+      showToast('Optimisation de la photo...');
+      const dataUrl = await compressImageToDataUrl(file, 1080, 1350, 0.85);
+      if (dataUrl) {
+        setFormCandidate((prev) => ({ ...prev, img: dataUrl }));
+        showToast('Photo de la candidate importée avec succès !');
+      }
+    }
+  };
+
+  const handleHeroFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 15 * 1024 * 1024) {
+        alert("L'image dépasse 15 Mo. Veuillez choisir une image plus légère.");
+        return;
+      }
+      showToast('Optimisation de la bannière Hero...');
+      const dataUrl = await compressImageToDataUrl(file, 1920, 1080, 0.85);
+      if (dataUrl) {
+        handleUpdateEventInfo({ heroImage: dataUrl });
+        showToast('Bannière Hero importée et enregistrée !');
+      }
     }
   };
 
@@ -1289,75 +1340,127 @@ export default function AdminDashboardPage() {
                     />
                   </div>
 
-                  <div className="form-group" style={{ marginBottom: 14 }}>
-                    <label className="form-label" htmlFor="hero-img-input">
-                      IMAGE DE LA SECTION HERO (URL OU CHEMIN)
-                    </label>
-                    <input
-                      id="hero-img-input"
-                      type="text"
-                      className="admin-input"
-                      value={settings.heroImage || '/miss-likie-hero.jpg'}
-                      onChange={(e) => handleUpdateEventInfo({ heroImage: e.target.value })}
-                      placeholder="Ex : /miss-likie-hero.jpg ou URL https://..."
-                    />
-                  </div>
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px dashed rgba(217, 182, 107, 0.4)',
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 16,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 14,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                      <label className="form-label" style={{ margin: 0, color: '#f3ede2', fontWeight: 600 }}>
+                        IMAGE DE LA SECTION HERO (BANNIÈRE PRINCIPALE)
+                      </label>
+                      <span style={{ fontSize: '0.72rem', color: '#a8a092' }}>
+                        Visible sur mobile, tablette et ordinateur
+                      </span>
+                    </div>
 
-                  {/* MINIATURE APERÇU HERO */}
-                  <div style={{ marginBottom: 14 }}>
-                    <span style={{ fontSize: '0.72rem', color: '#9e978b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                      Aperçu de la bannière Hero :
-                    </span>
+                    {/* Aperçu Grande Bannière Hero */}
                     <div
                       style={{
-                        height: 95,
-                        borderRadius: 8,
-                        marginTop: 6,
+                        height: 140,
+                        borderRadius: 10,
                         backgroundImage: `url('${settings.heroImage || '/miss-likie-hero.jpg'}')`,
                         backgroundSize: 'cover',
-                        backgroundPosition: 'center right',
-                        border: '1px solid rgba(217, 182, 107, 0.4)',
+                        backgroundPosition: 'center',
+                        border: '1.5px solid rgba(217, 182, 107, 0.5)',
                         position: 'relative',
                         overflow: 'hidden',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                       }}
                     >
                       <div
                         style={{
                           position: 'absolute',
                           inset: 0,
-                          background: 'linear-gradient(90deg, rgba(12,11,10,0.85) 0%, transparent 80%)',
+                          background: 'linear-gradient(90deg, rgba(12,11,10,0.85) 0%, rgba(12,11,10,0.4) 60%, transparent 100%)',
                           display: 'flex',
-                          alignItems: 'center',
-                          paddingLeft: 16,
-                          fontSize: '0.9rem',
-                          color: '#fff',
-                          fontWeight: 700,
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          paddingLeft: 20,
                         }}
                       >
-                        {settings.name} — {settings.edition}
+                        <span style={{ fontSize: '0.7rem', letterSpacing: '2px', color: '#d9b66b', textTransform: 'uppercase' }}>
+                          Aperçu en direct
+                        </span>
+                        <strong style={{ fontSize: '1.15rem', color: '#fff', marginTop: 2, fontFamily: "'Playfair Display', serif" }}>
+                          {settings.name || 'Miss Lékié'}
+                        </strong>
+                        <span style={{ fontSize: '0.75rem', color: '#c5beb1', marginTop: 2 }}>
+                          {settings.edition || 'Édition Officielle'}
+                        </span>
                       </div>
                     </div>
-                  </div>
 
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => handleUpdateEventInfo({ heroImage: '/miss-likie-hero.jpg' })}
-                    >
-                      Image Officielle Lékié
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() =>
-                        handleUpdateEventInfo({
-                          heroImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1920&q=85',
-                        })
-                      }
-                    >
-                      Studio Doré
-                    </button>
+                    {/* Boutons d'action et importation */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <label
+                        className="btn-gold"
+                        style={{
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '10px 18px',
+                          fontWeight: 600,
+                          fontSize: '0.82rem',
+                          borderRadius: 8,
+                        }}
+                      >
+                        📁 Choisir une photo depuis mon appareil (Téléphone / PC)
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleHeroFileUpload}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => handleUpdateEventInfo({ heroImage: '/miss-likie-hero.jpg' })}
+                        title="Rétablir la photo officielle d'origine"
+                        style={{ padding: '9px 14px', fontSize: '0.8rem' }}
+                      >
+                        🔄 Image officielle par défaut
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() =>
+                          handleUpdateEventInfo({
+                            heroImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1920&q=85',
+                          })
+                        }
+                        style={{ padding: '9px 14px', fontSize: '0.8rem' }}
+                      >
+                        ✨ Studio Doré
+                      </button>
+                    </div>
+
+                    {/* Champ URL direct */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+                      <label htmlFor="hero-img-input" style={{ fontSize: '0.72rem', color: '#d9b66b', letterSpacing: '0.08em' }}>
+                        OU SAISIR DIRECTEMENT L’URL DE L’IMAGE :
+                      </label>
+                      <input
+                        id="hero-img-input"
+                        type="text"
+                        className="admin-input"
+                        value={settings.heroImage || '/miss-likie-hero.jpg'}
+                        onChange={(e) => handleUpdateEventInfo({ heroImage: e.target.value })}
+                        placeholder="Ex : /miss-likie-hero.jpg ou URL https://..."
+                        style={{ fontSize: '0.82rem' }}
+                      />
+                    </div>
                   </div>
                 </div>
 

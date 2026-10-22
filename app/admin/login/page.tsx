@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
           </Link>
           <div className="login-badge">CONTRÔLE ADMINISTRATEUR</div>
           <h1>Espace Gestion</h1>
-          <p>Accès restreint au comité d’organisation Miss Lékié</p>
+          <p>Accès restreint au comité d’organisation Miss Beauté Africaine Lékié</p>
         </div>
 
         {error && (

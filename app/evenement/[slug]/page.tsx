@@ -120,7 +120,7 @@ export default function EventPage({ params }: { params: { slug: string } }) {
             <h1>
               {settings.name?.split(' ')[0] || 'Miss'}
               <br />
-              <em>{settings.name?.split(' ').slice(1).join(' ') || 'Lékié'}</em>
+              <em>{settings.name?.split(' ').slice(1).join(' ') || 'Beauté Africaine Lékié'}</em>
               <sup>2</sup>
             </h1>
             <div className="hero-rule" />
@@ -163,7 +163,7 @@ export default function EventPage({ params }: { params: { slug: string } }) {
             <em>Une histoire à écrire.</em>
           </h2>
           <p>
-            Miss Lékié célèbre les femmes qui incarnent l’élégance, l’intelligence et la fierté culturelle du Cameroun.
+            Miss Beauté Africaine Lékié célèbre les femmes qui incarnent l’élégance, l’intelligence et la fierté culturelle du Cameroun.
             Découvrez leurs profils, votez pour votre candidate favorite et contribuez à son sacre vers la couronne.
             <br />
             <br />
@@ -236,7 +236,7 @@ export default function EventPage({ params }: { params: { slug: string } }) {
                 Les candidates arrivent très bientôt
               </h3>
               <p style={{ color: 'var(--muted)', fontSize: '13px', maxWidth: '440px', margin: '0 auto', lineHeight: 1.8 }}>
-                La liste officielle des candidates pour Miss Lékié 2ᵉ Édition est en cours de configuration. Les profils seront publiés ici très prochainement !
+                La liste officielle des candidates pour Miss Beauté Africaine Lékié 2ᵉ Édition est en cours de configuration. Les profils seront publiés ici très prochainement !
               </p>
             </div>
           ) : (
@@ -373,7 +373,7 @@ export default function EventPage({ params }: { params: { slug: string } }) {
           <img src="/neeovopass-logo.jpg" alt="NEEOVOPASS" />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <span>NEEOVOPASS · MISS LÉKIÉ 2026</span>
+          <span>NEEOVOPASS · MISS BEAUTÉ AFRICAINE LÉKIÉ 2026</span>
           {settings.socials && settings.socials.length > 0 && (
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               {settings.socials.map((soc) => (

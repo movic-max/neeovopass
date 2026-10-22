@@ -128,7 +128,7 @@ export default function Home() {
           <h1>
             {settings.name?.split(' ')[0] || 'Miss'}
             <br />
-            <em>{settings.name?.split(' ').slice(1).join(' ') || 'Lékié'}</em>
+            <em>{settings.name?.split(' ').slice(1).join(' ') || 'Beauté Africaine Lékié'}</em>
             <sup>2</sup>
           </h1>
           <div className="hero-rule" />
@@ -263,7 +263,7 @@ export default function Home() {
                 Les candidates arrivent très bientôt
               </h3>
               <p style={{ color: 'var(--muted)', fontSize: '13px', maxWidth: '440px', margin: '0 auto', lineHeight: 1.8 }}>
-                La liste officielle des candidates pour Miss Lékié 2ᵉ Édition est en cours de configuration. Les profils seront publiés ici très prochainement !
+                La liste officielle des candidates pour Miss Beauté Africaine Lékié 2ᵉ Édition est en cours de configuration. Les profils seront publiés ici très prochainement !
               </p>
             </div>
           ) : (
@@ -454,7 +454,7 @@ export default function Home() {
           <br />
           C’est ce que l’on <em>transmet.</em>
         </blockquote>
-        <span>MISS LÉKIÉ · DEPUIS 2024</span>
+        <span>MISS BEAUTÉ AFRICAINE LÉKIÉ · DEPUIS 2024</span>
       </section>
 
       {/* FINAL CTA SECTION */}
@@ -483,7 +483,7 @@ export default function Home() {
           <p>
             Publie. Vends. Fais Voter.
             <br />
-            La billetterie et plateforme de vote officielle de Miss Lékié.
+            La billetterie et plateforme de vote officielle de Miss Beauté Africaine Lékié.
           </p>
           <div className="footer-links">
             <a href="#edition">L’édition</a>

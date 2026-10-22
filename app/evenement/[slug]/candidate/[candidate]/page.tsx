@@ -35,6 +35,7 @@ export default function CandidatePage({
   const [anon, setAnon] = useState(false);
   const [notice, setNotice] = useState(false);
   const [successPayment, setSuccessPayment] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -131,8 +132,8 @@ export default function CandidatePage({
         <Link href="/" className="footer-brand" title="NEEOVOPASS - Accueil">
           <img src="/neeovopass-logo.jpg" alt="NEEOVOPASS" />
         </Link>
-        <Link href={`/evenement/${eventSlug}`} className="candidate-back-event" title="Retourner à l’événement Miss Lékié">
-          ← MISS LÉKIÉ · 2<sup>e</sup> ÉDITION
+        <Link href={`/evenement/${eventSlug}`} className="candidate-back-event" title="Retourner à l’événement Miss Beauté Africaine Lékié">
+          ← MISS BEAUTÉ AFRICAINE LÉKIÉ · 2<sup>e</sup> ÉDITION
         </Link>
         <span className="candidate-nav-badge">PROFIL CANDIDATE</span>
       </div>
@@ -154,7 +155,7 @@ export default function CandidatePage({
               <br />
               <em>{c.name.split(' ').slice(1).join(' ')}</em>
             </h1>
-            <p>{c.tag} · MISS LÉKIÉ 2026</p>
+            <p>{c.tag} · MISS BEAUTÉ AFRICAINE LÉKIÉ 2026</p>
             <a className="button button-gold" href="#soutenir">
               Soutenir {c.name.split(' ')[0]} <span>↓</span>
             </a>
@@ -208,19 +209,35 @@ export default function CandidatePage({
           </h2>
           <p>{c.bio}</p>
           <p>
-            Pour {c.name.split(' ')[0]}, Miss Lékié est une occasion de célébrer les parcours singuliers et de partager
+            Pour {c.name.split(' ')[0]}, Miss Beauté Africaine Lékié est une occasion de célébrer les parcours singuliers et de partager
             une vision généreuse de la beauté camerounaise. Soutenez son aventure et faites entendre votre voix.
           </p>
           <div className="profile-social">
             <span>PARTAGER SON AVENTURE</span>
-            <button onClick={() => navigator.clipboard?.writeText(location.href)}>
-              Copier le lien ↗
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  navigator.clipboard?.writeText(window.location.href);
+                  setCopiedLink(true);
+                  setTimeout(() => setCopiedLink(false), 2500);
+                }
+              }}
+              style={{
+                background: copiedLink ? '#22c55e' : undefined,
+                color: copiedLink ? '#000' : undefined,
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {copiedLink ? '✓ Lien copié !' : 'Copier le lien ↗'}
             </button>
             <a
               target="_blank"
               rel="noreferrer"
               href={`https://wa.me/?text=${encodeURIComponent(
-                `Je soutiens ${c.name} pour Miss Lékié ! ${typeof window !== 'undefined' ? window.location.href : ''}`
+                `Votez pour ${c.name} (N° ${c.n}) au concours Miss Beauté Africaine Lékié 2026 !\nCliquez ici pour soutenir sa candidature :\n${
+                  typeof window !== 'undefined' ? window.location.href : ''
+                }`
               )}`}
               className="social-icon-btn"
               style={{ width: 34, height: 34 }}
@@ -244,7 +261,9 @@ export default function CandidatePage({
               target="_blank"
               rel="noreferrer"
               href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                `Je soutiens ${c.name} pour Miss Lékié 2026 !`
+                `Je soutiens ${c.name} (N° ${c.n}) pour Miss Beauté Africaine Lékié 2026 !`
+              )}&url=${encodeURIComponent(
+                typeof window !== 'undefined' ? window.location.href : ''
               )}`}
               className="social-icon-btn"
               style={{ width: 34, height: 34 }}
@@ -396,7 +415,7 @@ export default function CandidatePage({
           <img src="/neeovopass-logo.jpg" alt="NEEOVOPASS" />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <span>NEEOVOPASS · MISS LÉKIÉ 2026</span>
+          <span>NEEOVOPASS · MISS BEAUTÉ AFRICAINE LÉKIÉ 2026</span>
           {settings.socials && settings.socials.length > 0 && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {settings.socials.map((soc) => (

@@ -53,7 +53,7 @@ const STORAGE_KEY_AUTH = 'neeovopass_admin_auth_v1';
 const EVENT_CHANGE = 'neeovopass_state_updated';
 
 export const defaultSettings: EventSettings = {
-  name: 'Miss Lékié',
+  name: 'Miss Beauté Africaine Lékié',
   slug: eventSlug,
   edition: '2e Édition · 2026',
   subtitle: 'Une célébration de la grâce, de la culture et des femmes qui font rayonner le Cameroun.',
@@ -148,8 +148,9 @@ async function fetchSettingsFromSupabase(): Promise<void> {
   try {
     const { data, error } = await supabase.from('event_settings').select('*').eq('id', 'default').single();
     if (!error && data) {
+      const eventName = data.name === 'Miss Lékié' ? 'Miss Beauté Africaine Lékié' : (data.name || defaultSettings.name);
       const s: EventSettings = {
-        name: data.name || defaultSettings.name,
+        name: eventName,
         slug: data.slug || defaultSettings.slug,
         edition: data.edition || defaultSettings.edition,
         subtitle: data.subtitle || defaultSettings.subtitle,
@@ -298,6 +299,10 @@ export function getStoredSettings(): EventSettings {
       return defaultSettings;
     }
     const parsed = JSON.parse(raw);
+    if (parsed && (parsed.name === 'Miss Lékié' || !parsed.name)) {
+      parsed.name = 'Miss Beauté Africaine Lékié';
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
+    }
     return {
       ...defaultSettings,
       ...parsed,

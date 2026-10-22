@@ -381,7 +381,7 @@ export default function AdminDashboardPage() {
           formCandidate.img ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
         slug,
-        bio: formCandidate.bio || `${formCandidate.name} porte avec fierté les couleurs de sa région pour Miss Lékié.`,
+        bio: formCandidate.bio || `${formCandidate.name} porte avec fierté les couleurs de sa région pour Miss Beauté Africaine Lékié.`,
       };
       const updated = [...candidates, newCand];
       saveStoredCandidates(updated);
@@ -398,6 +398,15 @@ export default function AdminDashboardPage() {
       saveStoredCandidates(updated);
       setCandidates(updated);
       showToast(`Candidate "${name}" supprimée.`);
+    }
+  };
+
+  const handleCopyCandidateLink = (slug: string, name: string) => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      const url = `${origin}/evenement/${settings?.slug || 'miss-lekie-2e-edition'}/candidate/${slug}`;
+      navigator.clipboard?.writeText(url);
+      showToast(`Lien de vote officiel de "${name}" copié !`);
     }
   };
 
@@ -625,7 +634,7 @@ export default function AdminDashboardPage() {
               <div className="content-header">
                 <div className="content-title-wrap">
                   <h2>Tableau de bord Général</h2>
-                  <p>Pilotage en temps réel du concours Miss Lékié · 2e Édition 2026</p>
+                  <p>Pilotage en temps réel du concours Miss Beauté Africaine Lékié · 2e Édition 2026</p>
                 </div>
                 <div className="header-actions">
                   <button className="btn-secondary" onClick={handleToggleSuspenseMode}>
@@ -840,6 +849,14 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>
                             <div className="table-row-actions">
+                              <button
+                                className="btn-icon-action"
+                                style={{ color: '#d9b66b', borderColor: 'rgba(217,182,107,0.3)' }}
+                                onClick={() => handleCopyCandidateLink(c.slug, c.name)}
+                                title="Copier le lien de vote officiel de cette candidate"
+                              >
+                                🔗 Lien
+                              </button>
                               <button className="btn-icon-action" onClick={() => handleOpenEditModal(c)}>
                                 Modifier
                               </button>
@@ -942,6 +959,14 @@ export default function AdminDashboardPage() {
                           </td>
                           <td>
                             <div className="table-row-actions">
+                              <button
+                                className="btn-icon-action"
+                                style={{ color: '#d9b66b', borderColor: 'rgba(217,182,107,0.3)' }}
+                                onClick={() => handleCopyCandidateLink(c.slug, c.name)}
+                                title="Copier le lien de vote officiel de cette candidate"
+                              >
+                                🔗 Copier lien
+                              </button>
                               <button className="btn-icon-action" onClick={() => handleOpenEditModal(c)}>
                                 Modifier
                               </button>
@@ -1334,7 +1359,7 @@ export default function AdminDashboardPage() {
                       className="admin-input"
                       value={settings.name || ''}
                       onChange={(e) => handleUpdateEventInfo({ name: e.target.value })}
-                      placeholder="Ex : Miss Lékié"
+                      placeholder="Ex : Miss Beauté Africaine Lékié"
                     />
                   </div>
 
@@ -1402,7 +1427,7 @@ export default function AdminDashboardPage() {
                           Aperçu en direct
                         </span>
                         <strong style={{ fontSize: '1.15rem', color: '#fff', marginTop: 2, fontFamily: "'Playfair Display', serif" }}>
-                          {settings.name || 'Miss Lékié'}
+                          {settings.name || 'Miss Beauté Africaine Lékié'}
                         </strong>
                         <span style={{ fontSize: '0.75rem', color: '#c5beb1', marginTop: 2 }}>
                           {settings.edition || 'Édition Officielle'}

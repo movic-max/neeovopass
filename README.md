@@ -1,6 +1,6 @@
-# NEEOVOPASS — Miss Lékié 2e Édition
+# NEEOVOPASS — Miss Beauté Africaine Lékié 2e Édition
 
-Plateforme de vote et billetterie **NEEOVOPASS** (*Publie. Vends. Fais Voter.*) hébergeant le concours **Miss Lékié 2e Édition**.
+Plateforme de vote et billetterie **NEEOVOPASS** (*Publie. Vends. Fais Voter.*) hébergeant le concours **Miss Beauté Africaine Lékié 2e Édition**.
 
 ## Lancer en local
 
